@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}FindBack - Notifications{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-fade-up">
+    <div class="col-md-9 col-lg-8">
+        <div class="glass-card p-4 my-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-bell-fill text-primary" style="font-size: 1.8rem;"></i>
+                    <h2 class="mb-0">Notifications</h2>
+                </div>
+                
+                {% if notifications %}
+                    <form action="{{ url_for('mark_all_read') }}" method="POST">
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            <i class="bi bi-check2-all me-1"></i>Mark All as Read
+                        </button>
+                    </form>
+                {% endif %}
+            </div>
+            
+            {% if notifications %}
+                <div class="d-flex flex-column gap-3">
+                    {% for notification in notifications %}
+                        <div class="notification-item glass-card p-3 d-flex justify-content-between align-items-center gap-3 {% if not notification.is_read %}unread{% endif %}" data-id="{{ notification.id }}" style="border-radius: 12px;">
+                            <div class="d-flex align-items-start gap-3">
+                                <div class="p-2 rounded-circle bg-secondary text-primary d-flex align-items-center justify-content-center mt-1" style="width: 38px; height: 38px; flex-shrink: 0;">
+                                    <i class="bi {% if 'Match' in notification.message %}bi-arrow-left-right{% else %}bi-info-circle{% endif %}"></i>
+                                </div>
+                                <div>
+                                    <p class="mb-1 text-light">{{ notification.message }}</p>
+                                    <span class="text-secondary small">{{ notification.created_at }}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                                {% if not notification.is_read %}
+                                    <button class="btn btn-secondary btn-sm mark-read-btn" title="Mark as Read">
+                                        <i class="bi bi-check2"></i>
+                                    </button>
+                                {% endif %}
+                                <form action="{{ url_for('delete_notification', notif_id=notification.id) }}" method="POST" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Delete notification">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5 text-muted bg-secondary rounded-4 border border-secondary my-3">
+                    <i class="bi bi-bell-slash" style="font-size: 3.5rem; opacity: 0.2;"></i>
+                    <h5 class="mt-3 text-secondary">All caught up!</h5>
+                    <p class="small text-secondary mb-0">You don't have any notifications at the moment.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

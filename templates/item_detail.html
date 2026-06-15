@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}FindBack - {{ item.name }}{% endblock %}
+
+{% block content %}
+<div class="row g-4 animate-fade-up">
+    <!-- Left Column: Item Information -->
+    <div class="col-lg-7">
+        <div class="glass-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="badge {% if item_type == 'lost' %}badge-lost{% else %}badge-found{% endif %}">
+                    {% if item_type == 'lost' %}Lost Report{% else %}Found Report{% endif %}
+                </span>
+                <span class="text-secondary small"><i class="bi bi-clock me-1"></i>Reported on {{ item.created_at[:16] }}</span>
+            </div>
+            
+            <h2 class="mb-3">{{ item.name }}</h2>
+            <p class="text-uppercase text-primary fw-bold mb-3 small"><i class="bi bi-tag-fill me-1"></i>{{ item.category }}</p>
+            
+            <!-- Item image container -->
+            <div class="mb-4 rounded-4 overflow-hidden bg-secondary border border-secondary text-center position-relative" style="max-height: 400px; display: flex; align-items: center; justify-content: center;">
+                {% if item.image_url %}
+                    <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}" alt="{{ item.name }}" class="img-fluid object-fit-contain" style="max-height: 400px; width: 100%;">
+                {% else %}
+                    <div class="py-5 w-100 text-muted">
+                        <i class="bi bi-image" style="font-size: 5rem; opacity: 0.2;"></i>
+                        <h5 class="mt-2 text-secondary">No image provided by reporter</h5>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <h4 class="mb-3">Description</h4>
+            <p class="text-secondary mb-4" style="line-height: 1.6; white-space: pre-line;">{{ item.description }}</p>
+            
+            <div class="row g-3 p-3 bg-secondary rounded-4 mb-4 border border-secondary">
+                <div class="col-sm-6">
+                    <span class="text-muted d-block small uppercase fw-bold">Date {% if item_type == 'lost' %}Lost{% else %}Found{% endif %}</span>
+                    <strong class="text-primary"><i class="bi bi-calendar-check me-2"></i>{{ item.date_lost or item.date_found }}</strong>
+                </div>
+                <div class="col-sm-6">
+                    <span class="text-muted d-block small uppercase fw-bold">Location {% if item_type == 'lost' %}Lost{% else %}Found{% endif %}</span>
+                    <strong class="text-primary"><i class="bi bi-geo-alt-fill me-2"></i>{{ item.location_lost or item.location_found }}</strong>
+                </div>
+            </div>
+            
+            <!-- Resolve and Delete controls for Owner -->
+            {% if session.user_id == item.user_id %}
+                <div class="p-3 bg-secondary rounded-4 border border-secondary d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                    <div>
+                        <span class="text-muted d-block small">Status</span>
+                        <strong>{% if item.is_resolved %}Resolved (Closed){% else %}Active (Open Matches){% endif %}</strong>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <form action="{{ url_for('toggle_resolve_item', item_type=item_type, item_id=item.id) }}" method="POST">
+                            <button type="submit" class="btn {% if item.is_resolved %}btn-outline-warning{% else %}btn-success{% endif %} btn-sm">
+                                <i class="bi {% if item.is_resolved %}bi-arrow-counterclockwise{% else %}bi-check-all{% endif %} me-1"></i>
+                                {% if item.is_resolved %}Reopen Report{% else %}Mark as Resolved{% endif %}
+                            </button>
+                        </form>
+                        <form action="{{ url_for('delete_item', item_type=item_type, item_id=item.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to permanently delete this report?');">
+                            <button type="submit" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-trash me-1"></i>Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Right Column: Contact Details & Matching system list -->
+    <div class="col-lg-5">
+        <div class="d-flex flex-column gap-4 h-100">
+            <!-- Contact Box -->
+            <div class="glass-card p-4">
+                <h3 class="mb-3"><i class="bi bi-telephone-outbound text-primary me-2"></i>Contact Information</h3>
+                {% if session.user_id %}
+                    <div class="list-group list-group-flush border-0">
+                        <div class="list-group-item bg-transparent text-light border-secondary px-0 py-3 d-flex align-items-center gap-3">
+                            <i class="bi bi-person text-primary" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <span class="text-muted d-block small">Contact Name</span>
+                                <strong>{{ item.contact_name }}</strong>
+                            </div>
+                        </div>
+                        {% if item.contact_phone %}
+                            <div class="list-group-item bg-transparent text-light border-secondary px-0 py-3 d-flex align-items-center gap-3">
+                                <i class="bi bi-telephone text-primary" style="font-size: 1.5rem;"></i>
+                                <div>
+                                    <span class="text-muted d-block small">Phone Number</span>
+                                    <strong>{{ item.contact_phone }}</strong>
+                                </div>
+                            </div>
+                        {% endif %}
+                        <div class="list-group-item bg-transparent text-light border-0 px-0 py-3 d-flex align-items-center gap-3">
+                            <i class="bi bi-envelope text-primary" style="font-size: 1.5rem;"></i>
+                            <div>
+                                <span class="text-muted d-block small">Email Address</span>
+                                <a href="mailto:{{ item.contact_email }}" class="text-primary text-decoration-none fw-bold">{{ item.contact_email }}</a>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="bi bi-lock-fill text-muted mb-3" style="font-size: 2.5rem;"></i>
+                        <h5>Access Restrained</h5>
+                        <p class="text-secondary small mb-4">Please log in to view the contact details for this report.</p>
+                        <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm px-4">Login to view</a>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Smart Matching suggestions (only visible to reporter) -->
+            {% if session.user_id == item.user_id %}
+                <div class="glass-card p-4 flex-grow-1">
+                    <h3 class="mb-3 d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-cpu text-primary me-2"></i>Smart Matches</span>
+                        <span class="badge bg-primary rounded-pill small" style="font-size: 0.75rem;">{{ matches | length }} Found</span>
+                    </h3>
+                    <p class="text-secondary small mb-4">Our match engine computed these potential cross-reports based on categories, titles, keywords, location overlaps, and dates.</p>
+                    
+                    {% if matches %}
+                        <div class="d-flex flex-column gap-3 overflow-y-auto" style="max-height: 450px;">
+                            {% for match in matches %}
+                                <div class="p-3 bg-secondary rounded-4 border border-secondary position-relative">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h5 class="mb-0 text-truncate" style="max-width: 65%;">{{ match.name }}</h5>
+                                        <span class="badge bg-primary text-white fw-bold">{{ match.match_score }}% Match</span>
+                                    </div>
+                                    
+                                    <!-- Match score progress meter -->
+                                    <div class="match-meter-wrapper mb-3">
+                                        <div class="match-meter-bar" style="width: {{ match.match_score }}%;"></div>
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2 mb-3 align-items-center">
+                                        {% if match.image_url %}
+                                            <img src="{{ url_for('static', filename='uploads/' + match.image_url) }}" class="rounded-3 object-fit-cover" style="width: 50px; height: 50px;" alt="{{ match.name }}">
+                                        {% endif %}
+                                        <p class="text-secondary small mb-0 text-truncate-2 flex-grow-1">
+                                            <i class="bi bi-geo-alt me-1"></i>{{ match.location_lost or match.location_found }} | <i class="bi bi-calendar3 me-1"></i>{{ match.date_lost or match.date_found }}
+                                        </p>
+                                    </div>
+                                    
+                                    <!-- Match Actions -->
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ url_for('item_detail', item_type='lost' if item_type == 'found' else 'found', item_id=match.found_item_id if item_type == 'lost' else match.lost_item_id) }}" class="btn btn-secondary btn-sm flex-grow-1">
+                                            <i class="bi bi-eye"></i> View Match
+                                        </a>
+                                        
+                                        {% if match.is_approved_by_user %}
+                                            <button class="btn btn-success btn-sm disabled flex-grow-1"><i class="bi bi-check-circle"></i> Confirmed</button>
+                                        {% else %}
+                                            <form action="{{ url_for('confirm_match', match_id=match.id, item_type=item_type, item_id=item.id) }}" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-success btn-sm" title="Confirm item match">Confirm</button>
+                                            </form>
+                                            <form action="{{ url_for('reject_match', match_id=match.id, item_type=item_type, item_id=item.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Dismiss this match recommendation?');">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Dismiss suggestion">Dismiss</button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted bg-secondary rounded-4 border border-secondary">
+                            <i class="bi bi-arrow-left-right" style="font-size: 2.5rem; opacity: 0.2;"></i>
+                            <h5 class="mt-2 text-secondary">No matches suggested yet</h5>
+                            <p class="small text-secondary mb-0 px-4">As users register items, potential matches will be displayed here.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

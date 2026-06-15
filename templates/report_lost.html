@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}FindBack - Report Lost Item{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center animate-fade-up">
+    <div class="col-lg-8 col-md-10">
+        <div class="glass-card p-5 my-4">
+            <div class="d-flex align-items-center gap-3 mb-4 border-bottom border-secondary pb-3">
+                <div class="stat-icon lost" style="width: 50px; height: 50px; font-size: 1.5rem;">
+                    <i class="bi bi-patch-question"></i>
+                </div>
+                <div>
+                    <h2 class="mb-0">Report Lost Item</h2>
+                    <p class="text-secondary mb-0">Fill in details about the item you've misplaced. We will run immediate matches.</p>
+                </div>
+            </div>
+            
+            <form action="{{ url_for('report_lost') }}" method="POST" enctype="multipart/form-data">
+                <div class="row g-4">
+                    <!-- Name & Category -->
+                    <div class="col-md-6">
+                        <label for="item_name" class="form-label">Item Name *</label>
+                        <input type="text" class="form-control border-0" id="item_name" name="name" placeholder="e.g. iPhone 13, Black Leather Wallet" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="category" class="form-label">Category *</label>
+                        <select class="form-select border-0" id="category" name="category" required>
+                            <option value="" disabled selected>Select a category</option>
+                            <option value="Electronics">Electronics</option>
+                            <option value="Documents">Documents</option>
+                            <option value="Keys">Keys</option>
+                            <option value="Valuables">Valuables</option>
+                            <option value="Bags & Luggage">Bags & Luggage</option>
+                            <option value="Clothing & Accessories">Clothing & Accessories</option>
+                            <option value="Books & Stationery">Books & Stationery</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Date & Location -->
+                    <div class="col-md-6">
+                        <label for="date_lost" class="form-label">Date Misplaced *</label>
+                        <input type="date" class="form-control border-0" id="date_lost" name="date_lost" required max="{{ now_date }}">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="location_lost" class="form-label">Last Seen Location *</label>
+                        <input type="text" class="form-control border-0" id="location_lost" name="location_lost" placeholder="e.g. Library 2nd floor, Central Cafeteria" required>
+                    </div>
+                    
+                    <!-- Image Upload -->
+                    <div class="col-12">
+                        <label class="form-label">Upload Image (Optional but highly recommended)</label>
+                        <div class="image-preview-box text-center" id="image-preview-box" onclick="document.getElementById('item-image-input').click();">
+                            <i class="bi bi-cloud-upload text-primary" style="font-size: 2.5rem;"></i>
+                            <h5 class="mt-2 text-primary">Click to select image</h5>
+                            <p class="text-secondary small mb-0">Supports JPG, PNG, JPEG (Max 5MB)</p>
+                        </div>
+                        <input type="file" id="item-image-input" name="image" class="d-none" accept="image/*">
+                    </div>
+                    
+                    <!-- Description -->
+                    <div class="col-12">
+                        <label for="description" class="form-label">Detailed Description *</label>
+                        <textarea class="form-control border-0" id="description" name="description" rows="4" placeholder="Include serial numbers, brands, stickers, contents, colors, or distinguishing features..." required></textarea>
+                    </div>
+                    
+                    <div class="col-12 border-bottom border-secondary my-4"></div>
+                    
+                    <!-- Contact Details -->
+                    <h4 class="mb-2"><i class="bi bi-telephone-inbound text-primary me-2"></i>Contact Details</h4>
+                    <p class="text-secondary small">These details will be displayed to user matches to coordinate retrieval.</p>
+                    
+                    <div class="col-md-4">
+                        <label for="contact_name" class="form-label">Contact Name *</label>
+                        <input type="text" class="form-control border-0" id="contact_name" name="contact_name" value="{{ session.username }}" required>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="contact_phone" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control border-0" id="contact_phone" name="contact_phone" placeholder="e.g. +1 555-0199">
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <label for="contact_email" class="form-label">Email Address *</label>
+                        <input type="email" class="form-control border-0" id="contact_email" name="contact_email" value="{{ user_email }}" required>
+                    </div>
+                    
+                    <!-- Submit -->
+                    <div class="col-12 mt-4">
+                        <div class="d-flex gap-3 justify-content-end">
+                            <a href="{{ url_for('profile') }}" class="btn btn-secondary py-3">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-5 py-3">
+                                <i class="bi bi-file-earmark-plus me-2"></i>Submit Report
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

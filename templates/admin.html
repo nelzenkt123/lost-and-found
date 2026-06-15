@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}FindBack - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="animate-fade-up">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
+        <h2><i class="bi bi-shield-lock-fill text-warning me-2"></i>Administration Panel</h2>
+        <span class="badge bg-warning text-dark px-3 py-2">System Moderation</span>
+    </div>
+    
+    <!-- Stats Row -->
+    <div class="row g-4 mb-5 justify-content-center">
+        <div class="col-md-3 col-sm-6 col-10">
+            <div class="glass-card stat-card">
+                <div class="stat-icon bg-info">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ stats.users_count }}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-10">
+            <div class="glass-card stat-card">
+                <div class="stat-icon bg-danger">
+                    <i class="bi bi-patch-question-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ stats.lost_count }}</div>
+                    <div class="stat-label">Lost Reports</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-10">
+            <div class="glass-card stat-card">
+                <div class="stat-icon bg-success">
+                    <i class="bi bi-box-seam-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ stats.found_count }}</div>
+                    <div class="stat-label">Found Reports</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6 col-10">
+            <div class="glass-card stat-card">
+                <div class="stat-icon bg-primary">
+                    <i class="bi bi-check-all"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ stats.resolved_count }}</div>
+                    <div class="stat-label">Resolved Items</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Analytics Graphs Row -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="glass-card p-4 h-100">
+                <h4 class="mb-4">Reports by Category</h4>
+                <div class="chart-container" style="position: relative; height:250px; width:100%">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="glass-card p-4 h-100">
+                <h4 class="mb-4">Item Status Split</h4>
+                <div class="chart-container" style="position: relative; height:250px; width:100%">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Administration Sections -->
+    <div class="glass-card p-4 mb-5">
+        <ul class="nav nav-tabs nav-fill mb-4 border-secondary" id="adminTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active bg-transparent border-0 py-3" id="users-tab" data-bs-toggle="tab" data-bs-target="#users-pane" type="button" role="tab" aria-controls="users-pane" aria-selected="true">
+                    <i class="bi bi-people me-2"></i>Manage Users ({{ users | length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link bg-transparent border-0 py-3" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports-pane" type="button" role="tab" aria-controls="reports-pane" aria-selected="false">
+                    <i class="bi bi-file-earmark-bar-graph me-2"></i>Manage Reports ({{ reports | length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link bg-transparent border-0 py-3" id="matches-tab" data-bs-toggle="tab" data-bs-target="#matches-pane" type="button" role="tab" aria-controls="matches-pane" aria-selected="false">
+                    <i class="bi bi-arrow-left-right me-2"></i>Matches ({{ matches | length }})
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="adminTabsContent">
+            <!-- Manage Users -->
+            <div class="tab-pane fade show active" id="users-pane" role="tabpanel" aria-labelledby="users-tab" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table admin-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Created At</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                                <tr>
+                                    <td>{{ u.id }}</td>
+                                    <td><strong>{{ u.username }}</strong></td>
+                                    <td>{{ u.email }}</td>
+                                    <td>
+                                        {% if u.is_admin %}
+                                            <span class="badge bg-warning text-dark">Admin</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">User</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ u.created_at[:10] }}</td>
+                                    <td class="text-end">
+                                        {% if u.id != session.user_id %}
+                                            <form action="{{ url_for('admin_delete_user', user_id=u.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete user {{ u.username }} and all their reports?');">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="text-muted small">Active Session</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Manage Reports -->
+            <div class="tab-pane fade" id="reports-pane" role="tabpanel" aria-labelledby="reports-tab" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table admin-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Type</th>
+                                <th>Item Name</th>
+                                <th>Category</th>
+                                <th>Date</th>
+                                <th>Reporter</th>
+                                <th>Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in reports %}
+                                <tr>
+                                    <td>{{ r.id }}</td>
+                                    <td>
+                                        <span class="badge {% if r.type == 'lost' %}badge-lost{% else %}badge-found{% endif %}">
+                                            {{ r.type | upper }}
+                                        </span>
+                                    </td>
+                                    <td><strong>{{ r.name }}</strong></td>
+                                    <td>{{ r.category }}</td>
+                                    <td>{{ r.date_lost or r.date_found }}</td>
+                                    <td>{{ r.reporter_username or r.user_id }}</td>
+                                    <td>
+                                        {% if r.is_resolved %}
+                                            <span class="badge bg-success">Resolved</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">Active</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="{{ url_for('item_detail', item_type=r.type, item_id=r.id) }}" class="btn btn-secondary btn-sm" target="_blank">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <form action="{{ url_for('admin_delete_report', item_type=r.type, item_id=r.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Remove report #{{ r.id }} ({{ r.name }}) as spam/fake?');">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                    <i class="bi bi-trash"></i> Spammed
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Matches Grid -->
+            <div class="tab-pane fade" id="matches-pane" role="tabpanel" aria-labelledby="matches-tab" tabindex="0">
+                <div class="table-responsive">
+                    <table class="table admin-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Match ID</th>
+                                <th>Lost Item (#ID)</th>
+                                <th>Found Item (#ID)</th>
+                                <th>Match Score</th>
+                                <th>User Confirmed</th>
+                                <th>Created</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in matches %}
+                                <tr>
+                                    <td>#{{ m.id }}</td>
+                                    <td>
+                                        <a href="{{ url_for('item_detail', item_type='lost', item_id=m.lost_item_id) }}" target="_blank" class="text-decoration-none">
+                                            {{ m.lost_name }} (ID:{{ m.lost_item_id }})
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('item_detail', item_type='found', item_id=m.found_item_id) }}" target="_blank" class="text-decoration-none">
+                                            {{ m.found_name }} (ID:{{ m.found_item_id }})
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ m.match_score }}% Match</span>
+                                    </td>
+                                    <td>
+                                        {% if m.is_approved_by_user %}
+                                            <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Yes</span>
+                                        {% elif m.is_rejected %}
+                                            <span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Rejected</span>
+                                        {% else %}
+                                            <span class="text-secondary"><i class="bi bi-clock me-1"></i>Pending</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ m.created_at[:16] }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Category Chart
+    const catCtx = document.getElementById('categoryChart').getContext('2d');
+    
+    // Read category labels and counts injected from python backend dict values
+    const catData = {{ cat_chart_data | tojson | safe }};
+    
+    const categories = Object.keys(catData);
+    const counts = Object.values(catData);
+    
+    new Chart(catCtx, {
+        type: 'bar',
+        data: {
+            labels: categories,
+            datasets: [{
+                label: 'Reports count',
+                data: counts,
+                backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                borderColor: '#6366f1',
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                    ticks: { precision: 0 }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+    
+    // 2. Status Chart
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active Reports', 'Resolved Reports'],
+            datasets: [{
+                data: [{{ stats.lost_count + stats.found_count - stats.resolved_count }}, {{ stats.resolved_count }}],
+                backgroundColor: ['#6366f1', '#10b981'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { color: '#94a3b8' }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

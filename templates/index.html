@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}FindBack - Lost & Found Portal{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-center mb-5 animate-fade-up">
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-md-11">
+            <h1 class="hero-title">
+                Reconnecting You with What You <span class="hero-highlight">Lost</span> & <span class="hero-highlight">Found</span>
+            </h1>
+            <p class="hero-subtitle mb-4">
+                FindBack is a smart, matching-enabled portal to register lost belongings or return items you've found. 
+                Our AI-driven criteria matches reports in real-time to bring your items back.
+            </p>
+            
+            <!-- Quick Search Bar -->
+            <form action="{{ url_for('items') }}" method="GET" class="row g-2 justify-content-center mb-4">
+                <div class="col-md-7 col-9">
+                    <div class="input-group input-group-lg shadow-sm">
+                        <span class="input-group-text bg-secondary border-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" name="query" class="form-control border-0" placeholder="Search wallet, keys, phone..." aria-label="Search items">
+                    </div>
+                </div>
+                <div class="col-md-2 col-3">
+                    <button type="submit" class="btn btn-primary btn-lg w-100 h-100">Find</button>
+                </div>
+            </form>
+            
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('report_lost') }}" class="btn btn-primary btn-lg px-4 py-3 shadow">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>Report Lost Item
+                </a>
+                <a href="{{ url_for('report_found') }}" class="btn btn-secondary btn-lg px-4 py-3">
+                    <i class="bi bi-check-circle-fill me-2"></i>Report Found Item
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Dashboard Analytics & Statistics -->
+<section class="mb-5 py-4">
+    <h2 class="text-center mb-4">Platform Overview</h2>
+    <div class="row g-4 justify-content-center">
+        <!-- Stat Card 1 -->
+        <div class="col-md-4 col-sm-6 col-10">
+            <div class="glass-card stat-card d-flex align-items-center">
+                <div class="stat-icon lost">
+                    <i class="bi bi-patch-question-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ stats.lost_count }}</div>
+                    <div class="stat-label">Lost Items</div>
+                </div>
+            </div>
+        </div>
+        <!-- Stat Card 2 -->
+        <div class="col-md-4 col-sm-6 col-10">
+            <div class="glass-card stat-card d-flex align-items-center">
+                <div class="stat-icon found">
+                    <i class="bi bi-box-seam-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ stats.found_count }}</div>
+                    <div class="stat-label">Found Items</div>
+                </div>
+            </div>
+        </div>
+        <!-- Stat Card 3 -->
+        <div class="col-md-4 col-sm-6 col-10">
+            <div class="glass-card stat-card d-flex align-items-center">
+                <div class="stat-icon matches">
+                    <i class="bi bi-arrow-left-right"></i>
+                </div>
+                <div>
+                    <div class="stat-value">{{ stats.matches_count }}</div>
+                    <div class="stat-label">Smart Matches</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Recent Reports Section -->
+<section class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Recent Reports</h2>
+        <a href="{{ url_for('items') }}" class="btn btn-secondary btn-sm">View All <i class="bi bi-arrow-right"></i></a>
+    </div>
+    
+    <div class="row g-4">
+        {% if recent_items %}
+            {% for item in recent_items %}
+                <div class="col-lg-4 col-md-6 col-sm-12">
+                    <div class="glass-card h-100 d-flex flex-column">
+                        <div class="card-img-wrapper">
+                            {% if item.image_url %}
+                                <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}" class="card-img-top" alt="{{ item.name }}">
+                            {% else %}
+                                <div class="d-flex flex-column align-items-center justify-content-center text-muted h-100 bg-secondary" style="position:absolute; top:0; left:0; width:100%; height:100%;">
+                                    <i class="bi bi-image" style="font-size: 3rem; opacity: 0.3;"></i>
+                                    <span class="small mt-2">No Image Provided</span>
+                                </div>
+                            {% endif %}
+                            <span class="position-absolute top-0 end-0 m-3 badge {% if item.type == 'lost' %}badge-lost{% else %}badge-found{% endif %}">
+                                {% if item.type == 'lost' %}Lost{% else %}Found{% endif %}
+                            </span>
+                        </div>
+                        <div class="card-body p-4 d-flex flex-column flex-grow-1">
+                            <span class="text-uppercase text-muted fw-bold small tracking-wider">{{ item.category }}</span>
+                            <h4 class="card-title my-2">{{ item.name }}</h4>
+                            <p class="card-text text-secondary line-clamp-3 mb-4 flex-grow-1">
+                                {{ item.description | truncate(110) }}
+                            </p>
+                            
+                            <hr class="my-3 border-secondary" style="opacity: 0.15;">
+                            
+                            <div class="d-flex align-items-center justify-content-between small text-muted">
+                                <span>
+                                    <i class="bi bi-geo-alt-fill me-1"></i>
+                                    {{ item.location_lost or item.location_found | truncate(15) }}
+                                </span>
+                                <span>
+                                    <i class="bi bi-calendar3 me-1"></i>
+                                    {{ item.date_lost or item.date_found }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent border-0 px-4 pb-4 pt-0">
+                            <a href="{{ url_for('item_detail', item_type=item.type, item_id=item.id) }}" class="btn btn-secondary w-100">
+                                <i class="bi bi-info-circle me-1"></i>View Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12 text-center py-5">
+                <div class="glass-card p-5 max-width-600 mx-auto">
+                    <i class="bi bi-emoji-smile text-muted" style="font-size: 4rem;"></i>
+                    <h4 class="mt-3 text-muted">No items reported yet!</h4>
+                    <p class="text-secondary mb-4">Be the first to report an item and help make the community secure.</p>
+                    <a href="{{ url_for('report_lost') }}" class="btn btn-primary">File a Report</a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5 mb-5 rounded-4" style="background: var(--bg-secondary); border: 1px solid var(--border-color);">
+    <div class="container text-center">
+        <h2 class="mb-5">How FindBack Reconnects You</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="p-3">
+                    <div class="stat-icon lost mx-auto mb-4" style="width: 60px; height: 60px; font-size: 1.8rem;">
+                        <i class="bi bi-pen"></i>
+                    </div>
+                    <h4>1. Register Your Item</h4>
+                    <p class="text-secondary px-3">Provide key descriptors, category, date, and location where the item was lost or found.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3">
+                    <div class="stat-icon matches mx-auto mb-4" style="width: 60px; height: 60px; font-size: 1.8rem;">
+                        <i class="bi bi-cpu"></i>
+                    </div>
+                    <h4>2. Smart Matching Run</h4>
+                    <p class="text-secondary px-3">Our backend algorithms compute cross-relations based on keywords, date proximity, and category similarity.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-3">
+                    <div class="stat-icon found mx-auto mb-4" style="width: 60px; height: 60px; font-size: 1.8rem;">
+                        <i class="bi bi-bell"></i>
+                    </div>
+                    <h4>3. Notification & Claims</h4>
+                    <p class="text-secondary px-3">Get alerts about matches, approve/reject suggested items, and directly contact reporters securely.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

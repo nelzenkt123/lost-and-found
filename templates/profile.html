@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}FindBack - User Profile{% endblock %}
+
+{% block content %}
+<div class="row g-4 animate-fade-up">
+    <!-- Account Settings Sidebar -->
+    <div class="col-lg-4">
+        <div class="glass-card p-4">
+            <h3 class="mb-4"><i class="bi bi-person-fill text-primary me-2"></i>Account Details</h3>
+            
+            <div class="text-center mb-4 pb-3 border-bottom border-secondary" style="border-bottom-style: dashed !important; border-bottom-width: 1px !important;">
+                <div class="bg-secondary text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2.5rem; border: 2px solid var(--border-color);">
+                    {{ user.username[0] | upper }}
+                </div>
+                <h4>{{ user.username }}</h4>
+                <p class="text-muted mb-0">Member since {{ user.created_at[:10] }}</p>
+                {% if user.is_admin %}
+                    <span class="badge bg-warning text-dark mt-2 px-3 py-1">Administrator</span>
+                {% endif %}
+            </div>
+            
+            <form action="{{ url_for('update_profile') }}" method="POST">
+                <div class="mb-3">
+                    <label for="profile_email" class="form-label">Email Address</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-secondary border-0 text-secondary"><i class="bi bi-envelope"></i></span>
+                        <input type="email" class="form-control border-0" id="profile_email" name="email" value="{{ user.email }}" required>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="profile_password" class="form-label">New Password (leave blank to keep current)</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-secondary border-0 text-secondary"><i class="bi bi-key"></i></span>
+                        <input type="password" class="form-control border-0" id="profile_password" name="password" placeholder="Min. 6 characters" minlength="6">
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-save me-2"></i>Update Profile
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- User Reports Area -->
+    <div class="col-lg-8">
+        <div class="glass-card p-4">
+            <ul class="nav nav-tabs nav-fill mb-4 border-secondary" id="profileTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active bg-transparent border-0 py-3" id="lost-tab" data-bs-toggle="tab" data-bs-target="#lost-pane" type="button" role="tab" aria-controls="lost-pane" aria-selected="true">
+                        <i class="bi bi-patch-question me-2"></i>My Lost Items ({{ items.lost | length }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link bg-transparent border-0 py-3" id="found-tab" data-bs-toggle="tab" data-bs-target="#found-pane" type="button" role="tab" aria-controls="found-pane" aria-selected="false">
+                        <i class="bi bi-box-seam me-2"></i>My Found Items ({{ items.found | length }})
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="profileTabsContent">
+                <!-- Lost Items Pane -->
+                <div class="tab-pane fade show active" id="lost-pane" role="tabpanel" aria-labelledby="lost-tab" tabindex="0">
+                    {% if items.lost %}
+                        <div class="row g-3">
+                            {% for item in items.lost %}
+                                <div class="col-12">
+                                    <div class="p-3 rounded-4 bg-secondary d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3" style="border: 1px solid var(--border-color);">
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if item.image_url %}
+                                                <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}" class="rounded-3 object-fit-cover" style="width: 65px; height: 65px;" alt="{{ item.name }}">
+                                            {% else %}
+                                                <div class="rounded-3 bg-dark d-flex align-items-center justify-content-center text-muted" style="width: 65px; height: 65px;">
+                                                    <i class="bi bi-image" style="font-size: 1.5rem;"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <h5 class="mb-1 d-flex align-items-center gap-2">
+                                                    {{ item.name }} 
+                                                    {% if item.is_resolved %}
+                                                        <span class="badge bg-success small text-white" style="font-size: 0.65rem;">Resolved</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger small text-white" style="font-size: 0.65rem;">Active</span>
+                                                    {% endif %}
+                                                </h5>
+                                                <p class="text-secondary small mb-0"><i class="bi bi-geo-alt me-1"></i>{{ item.location_lost }} | <i class="bi bi-calendar3 me-1"></i>{{ item.date_lost }}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Actions -->
+                                        <div class="d-flex align-items-center gap-2">
+                                            <a href="{{ url_for('item_detail', item_type='lost', item_id=item.id) }}" class="btn btn-secondary btn-sm" title="View details and matches">
+                                                <i class="bi bi-eye"></i> Details
+                                            </a>
+                                            <form action="{{ url_for('toggle_resolve_item', item_type='lost', item_id=item.id) }}" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-sm {% if item.is_resolved %}btn-outline-warning{% else %}btn-success{% endif %}" title="Toggle resolution state">
+                                                    <i class="bi {% if item.is_resolved %}bi-arrow-counterclockwise{% else %}bi-check-all{% endif %}"></i> 
+                                                    {% if item.is_resolved %}Reopen{% else %}Resolve{% endif %}
+                                                </button>
+                                            </form>
+                                            <form action="{{ url_for('delete_item', item_type='lost', item_id=item.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete this report?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete report">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-journal-x text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-secondary mt-3">You haven't reported any lost items yet.</p>
+                            <a href="{{ url_for('report_lost') }}" class="btn btn-primary btn-sm">Report Lost Item</a>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Found Items Pane -->
+                <div class="tab-pane fade" id="found-pane" role="tabpanel" aria-labelledby="found-tab" tabindex="0">
+                    {% if items.found %}
+                        <div class="row g-3">
+                            {% for item in items.found %}
+                                <div class="col-12">
+                                    <div class="p-3 rounded-4 bg-secondary d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-3" style="border: 1px solid var(--border-color);">
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if item.image_url %}
+                                                <img src="{{ url_for('static', filename='uploads/' + item.image_url) }}" class="rounded-3 object-fit-cover" style="width: 65px; height: 65px;" alt="{{ item.name }}">
+                                            {% else %}
+                                                <div class="rounded-3 bg-dark d-flex align-items-center justify-content-center text-muted" style="width: 65px; height: 65px;">
+                                                    <i class="bi bi-image" style="font-size: 1.5rem;"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <h5 class="mb-1 d-flex align-items-center gap-2">
+                                                    {{ item.name }} 
+                                                    {% if item.is_resolved %}
+                                                        <span class="badge bg-success small text-white" style="font-size: 0.65rem;">Resolved</span>
+                                                    {% else %}
+                                                        <span class="badge bg-danger small text-white" style="font-size: 0.65rem;">Active</span>
+                                                    {% endif %}
+                                                </h5>
+                                                <p class="text-secondary small mb-0"><i class="bi bi-geo-alt me-1"></i>{{ item.location_found }} | <i class="bi bi-calendar3 me-1"></i>{{ item.date_found }}</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Actions -->
+                                        <div class="d-flex align-items-center gap-2">
+                                            <a href="{{ url_for('item_detail', item_type='found', item_id=item.id) }}" class="btn btn-secondary btn-sm" title="View details and matches">
+                                                <i class="bi bi-eye"></i> Details
+                                            </a>
+                                            <form action="{{ url_for('toggle_resolve_item', item_type='found', item_id=item.id) }}" method="POST" class="d-inline">
+                                                <button type="submit" class="btn btn-sm {% if item.is_resolved %}btn-outline-warning{% else %}btn-success{% endif %}" title="Toggle resolution state">
+                                                    <i class="bi {% if item.is_resolved %}bi-arrow-counterclockwise{% else %}bi-check-all{% endif %}"></i> 
+                                                    {% if item.is_resolved %}Reopen{% else %}Resolve{% endif %}
+                                                </button>
+                                            </form>
+                                            <form action="{{ url_for('delete_item', item_type='found', item_id=item.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete this report?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete report">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="bi bi-journal-x text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-secondary mt-3">You haven't reported any found items yet.</p>
+                            <a href="{{ url_for('report_found') }}" class="btn btn-primary btn-sm">Report Found Item</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
