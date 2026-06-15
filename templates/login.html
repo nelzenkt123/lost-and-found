@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Login | Lost & Found Platform{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-header">
+        <h2>Welcome Back</h2>
+        <p>Log in to access your claims and reported items</p>
+    </div>
+    
+    <div class="glass-panel" style="padding: 2.5rem;">
+        <form action="{{ url_for('login') }}" method="POST">
+            <div class="form-group">
+                <label for="email" class="form-label">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="name@domain.com" required>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 1.75rem;">
+                <label for="password" class="form-label">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <i class="fa-solid fa-arrow-right-to-bracket"></i> Log In
+            </button>
+        </form>
+    </div>
+    
+    <p style="text-align: center; margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+        Don't have an account? <a href="{{ url_for('register') }}" style="color: var(--accent); font-weight: 600;">Sign up now</a>
+    </p>
+</div>
+{% endblock %}

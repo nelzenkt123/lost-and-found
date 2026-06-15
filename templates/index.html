@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Home | Lost & Found Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <h1 class="hero-title">Reuniting You With Your Lost Belongings</h1>
+    <p class="hero-subtitle">Lost your phone, keys, wallet, or bag? Found someone else's property? Report it or search our intelligent database to get it back.</p>
+    <div class="hero-actions">
+        <a href="{{ url_for('search') }}" class="btn btn-primary">
+            <i class="fa-solid fa-magnifying-glass"></i> I Lost Something
+        </a>
+        <a href="{{ url_for('report') }}" class="btn btn-secondary">
+            <i class="fa-solid fa-plus"></i> I Found Something
+        </a>
+    </div>
+</section>
+
+<!-- Features Info Grid -->
+<section class="features-section">
+    <div class="features-grid">
+        <div class="glass-card">
+            <div class="icon-box"><i class="fa-solid fa-robot"></i></div>
+            <h3 style="margin: 1rem 0 0.5rem 0;">Smart Match Scoring</h3>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Our system automatically scores and ranks found items against your description using colors, brands, titles, locations, and dates.</p>
+        </div>
+        <div class="glass-card">
+            <div class="icon-box"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3 style="margin: 1rem 0 0.5rem 0;">Verification Protection</h3>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Items are only returned after claimants pass custom verification questions set by the finder, preventing false claims.</p>
+        </div>
+        <div class="glass-card">
+            <div class="icon-box"><i class="fa-solid fa-images"></i></div>
+            <h3 style="margin: 1rem 0 0.5rem 0;">Photo & Details</h3>
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">Upload photos of items you find, along with specific descriptors like brand, color, date, and coordinate logs.</p>
+        </div>
+    </div>
+</section>
+
+<!-- Recently Found Properties Section -->
+<section class="recent-section">
+    <div class="section-header">
+        <div>
+            <h2>Recently Found Items</h2>
+            <p style="color: var(--text-secondary);">Have you lost any of these recently? Click to verify ownership.</p>
+        </div>
+        <a href="{{ url_for('search') }}" class="btn btn-outline" style="padding: 0.5rem 1rem; font-size: 0.85rem;">
+            Search All Items <i class="fa-solid fa-arrow-right"></i>
+        </a>
+    </div>
+
+    {% if items %}
+        <div class="items-grid">
+            {% for item in items %}
+                <div class="glass-card item-card">
+                    <div class="item-card-img-container">
+                        {% if item.image_filename %}
+                            <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" class="item-card-img">
+                        {% else %}
+                            <!-- A generic beautiful modern background gradient placeholder when image is not provided -->
+                            <div style="width:100%; height:100%; background: linear-gradient(135deg, var(--accent-glow) 0%, var(--accent) 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:3rem;">
+                                <i class="fa-solid fa-box-open"></i>
+                            </div>
+                        {% endif %}
+                        <span class="item-card-badge {% if item.status == 'open' %}badge-open{% else %}badge-claimed{% endif %}">
+                            {{ item.status }}
+                        </span>
+                    </div>
+                    <div class="item-card-body">
+                        <span class="item-card-category">{{ item.category }}</span>
+                        <h3 class="item-card-title">{{ item.title }}</h3>
+                        
+                        <ul class="item-details-list">
+                            <li><i class="fa-solid fa-tag"></i> <strong>Brand:</strong> {{ item.brand }}</li>
+                            <li><i class="fa-solid fa-palette"></i> <strong>Color:</strong> {{ item.color }}</li>
+                            <li><i class="fa-solid fa-calendar-day"></i> <strong>Found on:</strong> {{ item.date_found }}</li>
+                            <li><i class="fa-solid fa-location-dot"></i> <strong>Location:</strong> {{ item.location }}</li>
+                        </ul>
+                        
+                        <div class="item-card-footer">
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                                Reported by <strong>{{ item.finder_name }}</strong>
+                            </span>
+                            <a href="{{ url_for('item_details', item_id=item.id) }}" class="btn btn-primary" style="padding: 0.4rem 0.9rem; font-size: 0.85rem;">
+                                View Details & Claim
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="glass-panel empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-circle-question"></i></div>
+            <h3>No items reported yet</h3>
+            <p style="margin-bottom: 1.5rem;">Be the first to list a found item on our platform!</p>
+            <a href="{{ url_for('report') }}" class="btn btn-primary">Report Found Item</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
