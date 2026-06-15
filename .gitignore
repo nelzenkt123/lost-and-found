@@ -1,0 +1,21 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Database
+database.db
+
+# Flask upload files (optional to ignore, usually ignored to keep repo clean)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE files
+.vscode/
+.idea/

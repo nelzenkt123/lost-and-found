@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Search & Match Lost Items | Lost & Found Platform{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 2rem auto;">
+    <div style="margin-bottom: 2rem; text-align: center;">
+        <h1 style="font-size: 2.25rem; margin-bottom: 0.5rem;">Find Your Lost Item</h1>
+        <p style="color: var(--text-secondary);">Enter the description of the item you lost. Our smart engine will match it against all reported found items.</p>
+    </div>
+
+    <!-- Search Form -->
+    <div class="glass-panel" style="padding: 2rem; margin-bottom: 3rem;">
+        <form action="{{ url_for('search') }}" method="GET">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="category" class="form-label">Category</label>
+                    <select id="category" name="category" class="form-control">
+                        <option value="" {% if not query_params.category %}selected{% endif %}>All Categories</option>
+                        <option value="Phone" {% if query_params.category == 'Phone' %}selected{% endif %}>Phone</option>
+                        <option value="Purse / Wallet" {% if query_params.category == 'Purse / Wallet' %}selected{% endif %}>Purse / Wallet</option>
+                        <option value="Watch" {% if query_params.category == 'Watch' %}selected{% endif %}>Watch</option>
+                        <option value="Bag" {% if query_params.category == 'Bag' %}selected{% endif %}>Bag</option>
+                        <option value="Keys" {% if query_params.category == 'Keys' %}selected{% endif %}>Keys</option>
+                        <option value="Documents" {% if query_params.category == 'Documents' %}selected{% endif %}>Documents (ID, Cards)</option>
+                        <option value="Electronics" {% if query_params.category == 'Electronics' %}selected{% endif %}>Electronics (Laptop, Buds, etc.)</option>
+                        <option value="Others" {% if query_params.category == 'Others' %}selected{% endif %}>Others</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title" class="form-label">Item / Product Name</label>
+                    <input type="text" id="title" name="title" class="form-control" value="{{ query_params.title or '' }}" placeholder="e.g. iPhone 13 Pro, Black wallet">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="brand" class="form-label">Brand</label>
+                    <input type="text" id="brand" name="brand" class="form-control" value="{{ query_params.brand or '' }}" placeholder="e.g. Apple, Nike, Fossil">
+                </div>
+                
+                <div class="form-group">
+                    <label for="color" class="form-label">Color</label>
+                    <input type="text" id="color" name="color" class="form-control" value="{{ query_params.color or '' }}" placeholder="e.g. Black, Brown, Red">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date_lost" class="form-label">Date Lost</label>
+                    <input type="date" id="date_lost" name="date_lost" class="form-control" value="{{ query_params.date_lost or '' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="location" class="form-label">Location Lost (Approximate)</label>
+                    <input type="text" id="location" name="location" class="form-control" value="{{ query_params.location or '' }}" placeholder="e.g. Central Park, Subway Station">
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                <button type="submit" class="btn btn-primary" style="padding: 0.75rem 2rem;">
+                    <i class="fa-solid fa-magnifying-glass"></i> Search & Match
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Section -->
+    {% if has_searched %}
+        <div>
+            <div class="section-header">
+                <h2>Match Results ({{ results|length }})</h2>
+                <p style="color: var(--text-secondary);">Ranked by match percentage similarity.</p>
+            </div>
+
+            {% if results %}
+                <div class="items-grid">
+                    {% for item in results %}
+                        <div class="glass-card item-card">
+                            <div class="item-card-img-container">
+                                {% if item.image_filename %}
+                                    <img src="{{ url_for('static', filename='uploads/' + item.image_filename) }}" alt="{{ item.title }}" class="item-card-img">
+                                {% else %}
+                                    <div style="width:100%; height:100%; background: linear-gradient(135deg, var(--accent-glow) 0%, var(--accent) 100%); display:flex; align-items:center; justify-content:center; color:white; font-size:3rem;">
+                                        <i class="fa-solid fa-box-open"></i>
+                                    </div>
+                                {% endif %}
+                                <span class="item-card-badge {% if item.status == 'open' %}badge-open{% else %}badge-claimed{% endif %}">
+                                    {{ item.status }}
+                                </span>
+                            </div>
+                            
+                            <div class="item-card-body">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                                    <span class="item-card-category">{{ item.category }}</span>
+                                    <span class="match-score-badge {{ item.match_tier_class }}">
+                                        <i class="fa-solid fa-circle-nodes"></i> {{ item.match_score }}% Match
+                                    </span>
+                                </div>
+                                
+                                <h3 class="item-card-title">{{ item.title }}</h3>
+                                
+                                <ul class="item-details-list">
+                                    <li><i class="fa-solid fa-tag"></i> <strong>Brand:</strong> {{ item.brand }}</li>
+                                    <li><i class="fa-solid fa-palette"></i> <strong>Color:</strong> {{ item.color }}</li>
+                                    <li><i class="fa-solid fa-calendar-day"></i> <strong>Found on:</strong> {{ item.date_found }}</li>
+                                    <li><i class="fa-solid fa-location-dot"></i> <strong>Location:</strong> {{ item.location }}</li>
+                                </ul>
+                                
+                                <div class="item-card-footer">
+                                    <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                                        Tier: <strong>{{ item.match_tier }}</strong>
+                                    </span>
+                                    <a href="{{ url_for('item_details', item_id=item.id) }}" class="btn btn-primary" style="padding: 0.4rem 0.9rem; font-size: 0.85rem;">
+                                        View Details & Claim
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="glass-panel empty-state">
+                    <div class="empty-state-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <h3>No matching items found</h3>
+                    <p>We couldn't find items matching your search criteria. Try modifying your filters or checking back later.</p>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

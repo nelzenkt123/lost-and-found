@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Report Found Item | Lost & Found Platform{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 2rem auto;">
+    <div style="margin-bottom: 2rem; text-align: center;">
+        <h1 style="font-size: 2.25rem; margin-bottom: 0.5rem;">Report a Found Item</h1>
+        <p style="color: var(--text-secondary);">Provide accurate details about the item you found. Our match engine will list this item when owners search for it.</p>
+    </div>
+
+    <div class="glass-panel" style="padding: 2.5rem; margin-bottom: 2rem;">
+        <form action="{{ url_for('report') }}" method="POST" enctype="multipart/form-data">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="category" class="form-label">Category *</label>
+                    <select id="category" name="category" class="form-control" required>
+                        <option value="" disabled selected>Select category</option>
+                        <option value="Phone">Phone</option>
+                        <option value="Purse / Wallet">Purse / Wallet</option>
+                        <option value="Watch">Watch</option>
+                        <option value="Bag">Bag</option>
+                        <option value="Keys">Keys</option>
+                        <option value="Documents">Documents (ID, Cards)</option>
+                        <option value="Electronics">Electronics (Laptop, Buds, etc.)</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title" class="form-label">Item / Product Name *</label>
+                    <input type="text" id="title" name="title" class="form-control" placeholder="e.g. iPhone 13 Pro, Leather Handbag" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="brand" class="form-label">Brand *</label>
+                    <input type="text" id="brand" name="brand" class="form-control" placeholder="e.g. Apple, Fossil, Nike, Unknown" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="color" class="form-label">Color *</label>
+                    <input type="text" id="color" name="color" class="form-control" placeholder="e.g. Space Gray, Black & White" required>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="date_found" class="form-label">Date Found *</label>
+                    <input type="date" id="date_found" name="date_found" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="location" class="form-label">Location Found *</label>
+                    <input type="text" id="location" name="location" class="form-control" placeholder="e.g. Central Park Cafe, Train station bench" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="form-label">Additional Description</label>
+                <textarea id="description" name="description" class="form-control" placeholder="Provide any other helpful clues (e.g. 'Found near the swings, battery was dead, minor scratch on bottom left corner')."></textarea>
+            </div>
+
+            <!-- Image Upload -->
+            <div class="form-group">
+                <label class="form-label">Upload Picture (Optional but recommended)</label>
+                <div class="image-upload-wrapper">
+                    <input type="file" id="item-image" name="item_image" accept="image/*">
+                    <div id="upload-placeholder" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.2rem; color: var(--accent);"></i>
+                        <span style="font-size: 0.9rem; font-weight: 500;">Click to select or drop image here</span>
+                        <span style="font-size: 0.75rem; color: var(--text-secondary);">Supports PNG, JPG, JPEG</span>
+                    </div>
+                    <img id="image-upload-preview" class="image-upload-preview" src="" alt="Preview">
+                </div>
+            </div>
+
+            <!-- Custom Verification Settings -->
+            <div class="glass-panel" style="padding: 1.5rem; background: rgba(79, 70, 229, 0.03); border-color: rgba(79, 70, 229, 0.2); margin: 2rem 0 1.5rem 0;">
+                <h3 style="font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
+                    <i class="fa-solid fa-lock" style="color: var(--accent);"></i> Verification Settings
+                </h3>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                    To prevent incorrect claims, formulate a question that only the real owner of this item can answer. The owner will need to answer this when making a claim.
+                </p>
+                <div class="form-group">
+                    <label for="verification_question" class="form-label">Verification Question *</label>
+                    <input type="text" id="verification_question" name="verification_question" class="form-control" placeholder="e.g. What is the Lock Screen wallpaper? / What items were inside the pocket?" required>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <a href="{{ url_for('index') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fa-solid fa-paper-plane"></i> Report Item
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

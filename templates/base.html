@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<<<<<<< HEAD
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
@@ -127,5 +128,89 @@
     <!-- Custom JS -->
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     {% block scripts %}{% endblock %}
+=======
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lost & Found{% endblock %}</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Font Awesome for premium icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <!-- Navigation Header -->
+    <nav class="navbar" id="navbar">
+        <a href="{{ url_for('index') }}" class="nav-brand">
+            <i class="fa-solid fa-magnifying-glass-location"></i>
+            Lost<span>Found</span>
+        </a>
+        <ul class="nav-links">
+            <li><a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">Home</a></li>
+            <li><a href="{{ url_for('search') }}" class="nav-link {% if request.path == '/search' %}active{% endif %}">Search / Match</a></li>
+            {% if session.get('user_id') %}
+                <li><a href="{{ url_for('report') }}" class="nav-link {% if request.path == '/report' %}active{% endif %}">Report Found Item</a></li>
+                <li><a href="{{ url_for('dashboard') }}" class="nav-link {% if request.path == '/dashboard' %}active{% endif %}">Dashboard</a></li>
+                <li><a href="{{ url_for('logout') }}" class="nav-link"><i class="fa-solid fa-arrow-right-from-bracket"></i> Logout</a></li>
+            {% else %}
+                <li><a href="{{ url_for('login') }}" class="nav-link {% if request.path == '/login' %}active{% endif %}">Login</a></li>
+                <li><a href="{{ url_for('register') }}" class="nav-btn">Sign Up</a></li>
+            {% endif %}
+            <li>
+                <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle dark mode">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toast-container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="toast toast-{{ category }}" role="alert">
+                        {% if category == 'success' %}
+                            <i class="fa-solid fa-circle-check"></i>
+                        {% elif category == 'error' %}
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                        {% else %}
+                            <i class="fa-solid fa-circle-info"></i>
+                        {% endif %}
+                        <div class="toast-message">{{ message }}</div>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2026 Lost & Found Platform. Developed with <i class="fa-solid fa-heart" style="color: var(--danger)"></i> to reconnect belongings with owners.</p>
+        </div>
+    </footer>
+
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+>>>>>>> e49450df2c5aa5b83f71c040be5fc0f87bca3c06
 </body>
 </html>

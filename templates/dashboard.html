@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | Lost & Found Platform{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2.25rem; margin-bottom: 0.5rem;">User Dashboard</h1>
+    <p style="color: var(--text-secondary);">Manage items you reported and track claims you've made.</p>
+</div>
+
+<!-- Tab Headers -->
+<div class="dashboard-tab-headers">
+    <div class="dashboard-tab active" data-tab="reported">
+        <i class="fa-solid fa-list-check"></i> My Reported Items
+    </div>
+    <div class="dashboard-tab" data-tab="claims">
+        <i class="fa-solid fa-hand-holding-hand"></i> Claims I Made
+    </div>
+</div>
+
+<!-- Tab Content: Reported Items -->
+<div id="tab-content-reported" class="dashboard-tab-content" style="display: block;">
+    {% if reported_items %}
+        <div style="display: flex; flex-direction: column; gap: 2rem;">
+            {% for item in reported_items %}
+                <div class="glass-panel" style="padding: 1.75rem;">
+                    <!-- Item Header Info -->
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                        <div>
+                            <span class="item-card-category" style="font-size: 0.75rem;">{{ item.category }}</span>
+                            <h3 style="font-size: 1.35rem; margin-top: 0.25rem;">
+                                <a href="{{ url_for('item_details', item_id=item.id) }}" style="color: var(--text-primary); text-decoration: underline;">{{ item.title }}</a>
+                            </h3>
+                            <span style="font-size: 0.85rem; color: var(--text-secondary);">
+                                Found at <strong>{{ item.location }}</strong> on <strong>{{ item.date_found }}</strong>
+                            </span>
+                        </div>
+                        <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
+                            <span class="status-badge {% if item.status == 'open' %}status-approved{% else %}status-pending{% endif %}">
+                                Item Status: {{ item.status }}
+                            </span>
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                                Question: <strong>{{ item.verification_question }}</strong>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Claims for this Item -->
+                    <div>
+                        <h4 style="font-size: 1rem; margin-bottom: 0.75rem; color: var(--text-secondary);">
+                            Claims Received ({{ item.claims|length }})
+                        </h4>
+                        
+                        {% if item.claims %}
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                {% for claim in item.claims %}
+                                    <div class="claim-sub-section">
+                                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                                            <div>
+                                                <strong>Claimant:</strong> {{ claim.claimant_name }}
+                                                <span class="status-badge status-{{ claim.status }}" style="margin-left: 0.5rem; font-size: 0.7rem;">
+                                                    {{ claim.status }}
+                                                </span>
+                                            </div>
+                                            <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                                                Submitted: {{ claim.created_at[:10] }}
+                                            </span>
+                                        </div>
+                                        
+                                        <div style="margin-bottom: 0.75rem; font-size: 0.9rem;">
+                                            <p style="margin-bottom: 0.25rem; color: var(--text-secondary);"><strong>Answer to Verification Question:</strong></p>
+                                            <p style="background: var(--bg-primary); padding: 0.5rem; border-radius: var(--border-radius-sm); border: 1px solid var(--glass-border);">{{ claim.verification_answer }}</p>
+                                        </div>
+                                        
+                                        <div style="margin-bottom: 1rem; font-size: 0.9rem;">
+                                            <p style="margin-bottom: 0.25rem; color: var(--text-secondary);"><strong>Proof Details:</strong></p>
+                                            <p style="background: var(--bg-primary); padding: 0.5rem; border-radius: var(--border-radius-sm); border: 1px solid var(--glass-border); white-space: pre-wrap;">{{ claim.proof_description }}</p>
+                                        </div>
+
+                                        {% if claim.status == 'pending' and item.status == 'open' %}
+                                            <div style="display: flex; gap: 0.75rem;">
+                                                <form action="{{ url_for('approve_claim', claim_id=claim.id) }}" method="POST">
+                                                    <button type="submit" class="btn btn-success" style="padding: 0.4rem 1rem; font-size: 0.85rem;" onclick="return confirm('Are you sure you want to APPROVE this claim? This will share your contact info with the claimant.')">
+                                                        <i class="fa-solid fa-check"></i> Approve Claim
+                                                    </button>
+                                                </form>
+                                                <form action="{{ url_for('reject_claim', claim_id=claim.id) }}" method="POST">
+                                                    <button type="submit" class="btn btn-danger" style="padding: 0.4rem 1rem; font-size: 0.85rem;" onclick="return confirm('Are you sure you want to REJECT this claim?')">
+                                                        <i class="fa-solid fa-xmark"></i> Reject Claim
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        {% elif claim.status == 'approved' %}
+                                            <div style="background: rgba(16, 185, 129, 0.05); padding: 0.75rem; border-radius: var(--border-radius-sm); border: 1px solid rgba(16, 185, 129, 0.2); font-size: 0.9rem;">
+                                                <p style="color: var(--success); font-weight: 600; margin-bottom: 0.25rem;"><i class="fa-solid fa-circle-check"></i> Claim Approved & contact information shared:</p>
+                                                <ul style="list-style: none;">
+                                                    <li><strong>Claimant Email:</strong> <a href="mailto:{{ claim.claimant_email }}" style="color: var(--accent); text-decoration: underline;">{{ claim.claimant_email }}</a></li>
+                                                    <li><strong>Claimant Phone:</strong> <a href="tel:{{ claim.claimant_phone }}" style="color: var(--accent); text-decoration: underline;">{{ claim.claimant_phone }}</a></li>
+                                                </ul>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">No claims received for this item yet.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="glass-panel empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-clipboard-question"></i></div>
+            <h3>You haven't reported any items</h3>
+            <p style="margin-bottom: 1.5rem;">Have you found a lost property recently? Report it to help its owner find it!</p>
+            <a href="{{ url_for('report') }}" class="btn btn-primary">Report Found Item</a>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Tab Content: Claims I Made -->
+<div id="tab-content-claims" class="dashboard-tab-content" style="display: none;">
+    {% if claims_made %}
+        <div class="glass-panel dashboard-table-wrapper" style="padding: 1.5rem;">
+            <table class="dashboard-table">
+                <thead>
+                    <tr>
+                        <th>Found Item</th>
+                        <th>Category</th>
+                        <th>Finder Name</th>
+                        <th>Submitted Date</th>
+                        <th>Claim Status</th>
+                        <th>Action / Contact</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for claim in claims_made %}
+                        <tr>
+                            <td>
+                                <strong>
+                                    <a href="{{ url_for('item_details', item_id=claim.item_id) }}" style="color: var(--text-primary); text-decoration: underline;">
+                                        {{ claim.item_title }}
+                                    </a>
+                                </strong>
+                            </td>
+                            <td>{{ claim.item_category }}</td>
+                            <td>{{ claim.finder_name }}</td>
+                            <td>{{ claim.created_at[:10] }}</td>
+                            <td>
+                                <span class="status-badge status-{{ claim.status }}">
+                                    {{ claim.status }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if claim.status == 'approved' %}
+                                    <a href="{{ url_for('item_details', item_id=claim.item_id) }}" class="btn btn-primary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                                        <i class="fa-solid fa-address-book"></i> View Contact Info
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('item_details', item_id=claim.item_id) }}" class="btn btn-secondary" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                                        View Details
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="glass-panel empty-state">
+            <div class="empty-state-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <h3>You haven't made any claims</h3>
+            <p style="margin-bottom: 1.5rem;">If you lost something, check reported found items and verify ownership to make a claim.</p>
+            <a href="{{ url_for('search') }}" class="btn btn-primary">Search / Match Items</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
